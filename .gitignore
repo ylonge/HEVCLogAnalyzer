@@ -45,3 +45,38 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# =========================
+# Compiling Files --Add ylonge 2017/6/7
+# =========================
+
+# VS 2015
+# =========================
+
+# Debug
+*.idb
+*.lib
+*.ilk
+*.exe
+*.pdb
+
+# Release
+*.iobj
+*.ipdb
+
+# Project
+*.user
+*.filters
+*.log
+*.tlog
+*.lastbuildstate
+*.obj
+*.cache
+*.bat
+
+# Simulation
+*.txt
+*.yuv
+*.bin
+
+

@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LogAnalyzerCplus", "build\LogAnalyzerCplus\LogAnalyzerCplus.vcxproj", "{6745DB68-A1E9-4AE6-B835-33038FB37266}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ComClass", "build\ComClass\ComClass.vcxproj", "{B4C610A7-F205-45E8-984C-061CEF60D772}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestMain", "build\TestMain\TestMain.vcxproj", "{AA970490-BD75-4296-96A5-D34CC719D739}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6745DB68-A1E9-4AE6-B835-33038FB37266}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6745DB68-A1E9-4AE6-B835-33038FB37266}.Debug|Win32.Build.0 = Debug|Win32
+		{6745DB68-A1E9-4AE6-B835-33038FB37266}.Release|Win32.ActiveCfg = Release|Win32
+		{6745DB68-A1E9-4AE6-B835-33038FB37266}.Release|Win32.Build.0 = Release|Win32
+		{B4C610A7-F205-45E8-984C-061CEF60D772}.Debug|Win32.ActiveCfg = Debug|Win32
+		{B4C610A7-F205-45E8-984C-061CEF60D772}.Debug|Win32.Build.0 = Debug|Win32
+		{B4C610A7-F205-45E8-984C-061CEF60D772}.Release|Win32.ActiveCfg = Release|Win32
+		{B4C610A7-F205-45E8-984C-061CEF60D772}.Release|Win32.Build.0 = Release|Win32
+		{AA970490-BD75-4296-96A5-D34CC719D739}.Debug|Win32.ActiveCfg = Debug|Win32
+		{AA970490-BD75-4296-96A5-D34CC719D739}.Debug|Win32.Build.0 = Debug|Win32
+		{AA970490-BD75-4296-96A5-D34CC719D739}.Release|Win32.ActiveCfg = Release|Win32
+		{AA970490-BD75-4296-96A5-D34CC719D739}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
