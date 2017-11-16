@@ -23,12 +23,7 @@ private:
 
   ComLogAnalyze m_cVidLog;
   ComLogAnalyze m_cLibLog;
-
-  char m_chNameOfVidLogFile[MAX_NUM_CHAR_NAME];
-  char m_chNameOfLibLogFile[MAX_NUM_CHAR_NAME];
-  char m_chNameOfMapFile[MAX_NUM_CHAR_NAME];
-  char m_chNameOfSceneChangePOCFile[MAX_NUM_CHAR_NAME];
-  char m_chNameOfOutResultFile[MAX_NUM_CHAR_NAME];
+	ComLogAnalyze m_cAnchorVidLog;
 
   std::vector<std::vector<unsigned int>> m_vvuiMaskOfVidPic;
   std::vector<std::vector<unsigned int>> m_vvuiMapOfVidSceneChangePic;
@@ -42,6 +37,9 @@ private:
   std::vector<double> m_vdAveragePSNRY;
   std::vector<double> m_vdAveragePSNRU;
   std::vector<double> m_vdAveragePSNRV;
+
+	// access channel.
+	ComParam* m_pcParam;
 
 public:
   ComCBVCLogAnalyze();
@@ -80,4 +78,7 @@ public:
   void GetSceneAverageData();
   void CalcAverageData();
   void KeyPicExpand(std::vector<unsigned int> & vuiSrcSceneChangePOC);
+
+	void runCalculateRandomAccess();
+	void runCalculateAnchorRandomAccess();
 };

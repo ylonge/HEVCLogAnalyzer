@@ -82,6 +82,15 @@ typedef       Int             TCoeff;     ///< transform coefficient
 enum EnumTypeOfCodec
 {
 	CODEC_HM = 0,
-	CODEC_AVC = 1,
-	CODEC_AVS = 2,
+	CODEC_LIBVC = 1,
+	NUM_CODEC = 2
+};
+
+// Types of results
+enum EnumTypeOfResult
+{
+	RESULT_TOTAL = 0,
+	RESULT_PART = 1,
+	RESULT_RANDOM_ACCESS = 2,
+	NUM_RESULT = 3
 };

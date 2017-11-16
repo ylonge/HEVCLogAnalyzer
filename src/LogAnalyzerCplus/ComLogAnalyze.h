@@ -9,11 +9,12 @@
 #include <stdlib.h>
 #include <vector>
 
-#include "ComClass/TypeDef.h"
+#include "ComClass\TypeDef.h"
+#include "ComClass\ComParam.h"
 
 class ComLogAnalyze
 {
-private:
+public:
 
   /************************************************************************/
   /* Common Data.
@@ -36,8 +37,11 @@ private:
   unsigned int m_uiEndNumOfLogLine;
   unsigned int m_uiNumOfLogLine;
   EnumTypeOfCodec m_eTypeOfCodec;
-  char m_chNameOfLogFile[MAX_NUM_CHAR_NAME];
-  char m_chNameOfResultFile[MAX_NUM_CHAR_NAME];
+  std::string m_sNameOfLogFile;
+  std::string m_sNameOfResultFile;
+
+	// access channel.
+	ComParam *m_pcParam;
 
 public:
   ComLogAnalyze();
@@ -46,8 +50,8 @@ public:
   /************************************************************************/
   /* Initialization
   /************************************************************************/
-
-  void InitParam(char *pchNameOfLogFile, char *pchNameOfResultFile, unsigned int uiStartNumOfLogLine, unsigned int uiEndNumOfLogLine, double dFrameRate, EnumTypeOfCodec iTypeOfCodec);
+	void init(ComParam &cParam);
+  void InitParam(std::string sNameOfLogFile, std::string sNameOfOutFile, int iStartNum, int iEndNum, double dFrameRate, EnumTypeOfCodec eTypeOfCodec);
   void InitMemory();
   void DestroyMemory();
 
@@ -68,10 +72,12 @@ public:
   void ReadLogFile();
   void ReadSingleIntraLogFile();
   void WriteResult();
+	void runReadSummary();
 
   /************************************************************************/
   /* Value Processing.
   /************************************************************************/
 
   void CalcAverageData();
+	void runSort();
 };

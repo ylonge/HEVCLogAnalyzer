@@ -27,12 +27,17 @@ ComLogAnalyze::~ComLogAnalyze()
 /* Initialization
 /************************************************************************/
 
-void ComLogAnalyze::InitParam(char chNameOfLogFile[], char chNameOfResultFile[], unsigned int uiStartNumOfLogLine, unsigned int uiEndNumOfLogLine, double dFrameRate, EnumTypeOfCodec eTypeOfCodec)
+void ComLogAnalyze::init(ComParam & cParam)
 {
-  sprintf_s(m_chNameOfLogFile, "%s", chNameOfLogFile);
-  sprintf_s(m_chNameOfResultFile, "%s", chNameOfResultFile);
-  m_uiStartNumOfLogLine = uiStartNumOfLogLine;
-  m_uiEndNumOfLogLine = uiEndNumOfLogLine;
+	m_pcParam = &cParam;
+}
+
+void ComLogAnalyze::InitParam(string sNameOfLogFile, string sNameOfOutFile, int iStartNum, int iEndNum, double dFrameRate, EnumTypeOfCodec eTypeOfCodec)
+{
+	m_sNameOfLogFile = sNameOfLogFile;
+	m_sNameOfResultFile = sNameOfOutFile;
+  m_uiStartNumOfLogLine = iStartNum;
+  m_uiEndNumOfLogLine = iEndNum;
   m_uiNumOfLogLine = m_uiEndNumOfLogLine - m_uiStartNumOfLogLine + 1;
   m_dFrameRate = dFrameRate;
   m_eTypeOfCodec = eTypeOfCodec;
@@ -79,7 +84,7 @@ void ComLogAnalyze::DestroyMemory()
 
 void ComLogAnalyze::ReadLogFile()
 {
-  ifstream ifLogFile(m_chNameOfLogFile);
+  ifstream ifLogFile(m_sNameOfLogFile);
   char buffer[2048];
   char chTemp0[1000], chTemp1[1000], chTemp2[1000], chTemp3[1000], chTemp4[1000];
 
@@ -90,11 +95,11 @@ void ComLogAnalyze::ReadLogFile()
 
   if (! ifLogFile.good())
   {
-    cerr << "Parameter file of library extraction " << m_chNameOfLogFile << " could not be open!\n" << endl;
+    cerr << "Parameter file of library extraction " << m_sNameOfLogFile << " could not be open!\n" << endl;
     exit(1);
   }
 
-  while (ifLogFile.good() && uiCountOfLogLine < m_uiEndNumOfLogLine) // Read until the end of file or the end of given line number.
+  while (ifLogFile.good() || (m_uiEndNumOfLogLine != 0 && uiCountOfLogLine < m_uiEndNumOfLogLine)) // Read until the end of file or the end of given line number.
   {
     ifLogFile.getline(buffer, 2048);
 
@@ -119,14 +124,14 @@ void ComLogAnalyze::ReadLogFile()
             else
             {
               sscanf(buffer, "%*[^C]C%s%*[^)])%s%*[^Y]Y%s%*[^U]U%s%*[^V]V%s%*[^\t\n]", chTemp0, chTemp1, chTemp2, chTemp3, chTemp4);
-			  dPOC = atof(chTemp0);
+							dPOC = atof(chTemp0);
               dBit = atof(chTemp1);
               dPSNRY = atof(chTemp2);
               dPSNRU = atof(chTemp3);
               dPSNRV = atof(chTemp4);
 
-              assert(uiCountOfData < m_uiNumOfLogLine);
-			  m_vdPOC.push_back(dPOC);
+              //assert(uiCountOfData < m_uiNumOfLogLine);
+							m_vdPOC.push_back(dPOC);
               m_vdBit.push_back(dBit);
               m_vdPSNRY.push_back(dPSNRY);
               m_vdPSNRU.push_back(dPSNRU);
@@ -151,7 +156,7 @@ void ComLogAnalyze::ReadLogFile()
 
 void ComLogAnalyze::ReadSingleIntraLogFile()
 {
-  ifstream ifLogFile(m_chNameOfLogFile);
+  ifstream ifLogFile(m_sNameOfLogFile);
   char buffer[2048];
   char chTemp1[1000], chTemp2[1000], chTemp3[1000], chTemp4[1000], chTemp5[1000];
 
@@ -163,7 +168,7 @@ void ComLogAnalyze::ReadSingleIntraLogFile()
 
   if (! ifLogFile.good())
   {
-    cerr << "Parameter file of library extraction " << m_chNameOfLogFile << " could not be open!\n" << endl;
+    cerr << "Parameter file of library extraction " << m_sNameOfLogFile << " could not be open!\n" << endl;
     exit(1);
   }
 
@@ -240,13 +245,121 @@ void ComLogAnalyze::ReadSingleIntraLogFile()
 
 void ComLogAnalyze::WriteResult()
 {
-	ofstream ofFileOfResult(m_chNameOfResultFile);
+	ofstream ofFileOfResult(m_sNameOfResultFile);
 
 	ofFileOfResult << "POC\tBits\tY-PSNR\tU-PSNR\tV-PSNR\t" << endl;
 	for ( int i = 0; i != m_uiNumOfLogLine; ++i )
 	{
 		ofFileOfResult << m_vdPOC[i] << "\t" << m_vdBit[ i ] << "\t" << m_vdPSNRY[ i ] << "\t" << m_vdPSNRU[ i ] << "\t" << m_vdPSNRV[ i ] << "\t\n";
 	}
+}
+
+void ComLogAnalyze::runReadSummary()
+{
+	ifstream ifLogFile(m_pcParam->m_sNameOfLibLogFile);
+	ofstream ofResFile(m_pcParam->m_sNameOfOutResultFile, ios::app);
+
+	char buffer[2048];
+	char chTemp0[1000], chTemp1[1000], chTemp2[1000], chTemp3[1000], chTemp4[1000], chTemp5[1000];
+
+	int iNumOfPic = 0;
+	double dBit = 0, dPSNRY = 0, dPSNRU = 0, dPSNRV = 0, dPSNRYUV = 0;
+
+	ofResFile << m_pcParam->m_sNameOfLibLogFile;
+
+	if (!ifLogFile.good())
+	{
+		cerr << "Parameter file of library extraction " << m_sNameOfLogFile << " could not be open!\n" << endl;
+		exit(1);
+	}
+
+	while (ifLogFile.good()) // Read until the end of file or the end of given line number.
+	{
+		ifLogFile.getline(buffer, 2048);
+
+		if (strlen(buffer) < 2)
+		{
+			// ignore this line - nothing to do
+		}
+		else
+		{
+			switch (m_pcParam->m_eTypeOfCodec) // Switch between different types of codecs.
+			{
+			case CODEC_HM: // Log file of HM.
+				{
+					if (buffer[0] == 'S' && buffer[1] == 'U' && buffer[2] == 'M') // Check whether the line is the data line. 
+					{
+						ifLogFile.getline(buffer, 2048); //skip the second line after summary.
+						ifLogFile.getline(buffer, 2048);
+						sscanf(buffer, "%s %*s %s %s %s %s %s %*[^\t\n]", chTemp0, chTemp1, chTemp2, chTemp3, chTemp4, chTemp5);
+						iNumOfPic = atoi(chTemp0);
+						dBit = atof(chTemp1);
+						dPSNRY = atof(chTemp2);
+						dPSNRU = atof(chTemp3);
+						dPSNRV = atof(chTemp4);
+						dPSNRYUV = atof(chTemp5);
+						ofResFile << "\tsummary\t" << iNumOfPic << "\t" << dBit << "\t" << dPSNRY << "\t" << dPSNRU << "\t" << dPSNRV << "\t" << dPSNRYUV;
+					}
+					else if (buffer[0] == 'I' && buffer[1] == ' ' && buffer[2] == 'S')
+					{
+						ifLogFile.getline(buffer, 2048); //skip the second line after summary.
+						ifLogFile.getline(buffer, 2048);
+						sscanf(buffer, "%s %*s %s %s %s %s %s %*[^\t\n]", chTemp0, chTemp1, chTemp2, chTemp3, chTemp4, chTemp5);
+						iNumOfPic = atoi(chTemp0);
+						dBit = atof(chTemp1);
+						dPSNRY = atof(chTemp2);
+						dPSNRU = atof(chTemp3);
+						dPSNRV = atof(chTemp4);
+						dPSNRYUV = atof(chTemp5);
+						ofResFile << "\tI-slice\t" << iNumOfPic << "\t" << dBit << "\t" << dPSNRY << "\t" << dPSNRU << "\t" << dPSNRV << "\t" << dPSNRYUV;
+					}
+					else if (buffer[0] == 'P' && buffer[1] == ' ' && buffer[2] == 'S')
+					{
+						ifLogFile.getline(buffer, 2048); //skip the second line after summary.
+						ifLogFile.getline(buffer, 2048);
+						sscanf(buffer, "%s %*s %s %s %s %s %s %*[^\t\n]", chTemp0, chTemp1, chTemp2, chTemp3, chTemp4, chTemp5);
+						iNumOfPic = atoi(chTemp0);
+						dBit = atof(chTemp1);
+						dPSNRY = atof(chTemp2);
+						dPSNRU = atof(chTemp3);
+						dPSNRV = atof(chTemp4);
+						dPSNRYUV = atof(chTemp5);
+						ofResFile << "\tP-slice\t" << iNumOfPic << "\t" << dBit << "\t" << dPSNRY << "\t" << dPSNRU << "\t" << dPSNRV << "\t" << dPSNRYUV;
+					}
+					else if (buffer[0] == 'B' && buffer[1] == ' ' && buffer[2] == 'S')
+					{
+						ifLogFile.getline(buffer, 2048); //skip the second line after summary.
+						ifLogFile.getline(buffer, 2048);
+						sscanf(buffer, "%s %*s %s %s %s %s %s %*[^\t\n]", chTemp0, chTemp1, chTemp2, chTemp3, chTemp4, chTemp5);
+						iNumOfPic = atoi(chTemp0);
+						dBit = atof(chTemp1);
+						dPSNRY = atof(chTemp2);
+						dPSNRU = atof(chTemp3);
+						dPSNRV = atof(chTemp4);
+						dPSNRYUV = atof(chTemp5);
+						ofResFile << "\tB-slice\t" << iNumOfPic << "\t" << dBit << "\t" << dPSNRY << "\t" << dPSNRU << "\t" << dPSNRV << "\t" << dPSNRYUV;
+					}
+					else if (buffer[0] == 'L' && buffer[1] == 'i' && buffer[2] == 'b')
+					{
+						ifLogFile.getline(buffer, 2048); //skip the second line after summary.
+						ifLogFile.getline(buffer, 2048);
+						sscanf(buffer, "%s %*s %s %s %s %s %s %*[^\t\n]", chTemp0, chTemp1, chTemp2, chTemp3, chTemp4, chTemp5);
+						iNumOfPic = atoi(chTemp0);
+						dBit = atof(chTemp1);
+						dPSNRY = atof(chTemp2);
+						dPSNRU = atof(chTemp3);
+						dPSNRV = atof(chTemp4);
+						dPSNRYUV = atof(chTemp5);
+						ofResFile << "\tLib-slice\t" << iNumOfPic << "\t" << dBit << "\t" << dPSNRY << "\t" << dPSNRU << "\t" << dPSNRV << "\t" << dPSNRYUV;
+					}
+				}
+			} // end switch
+		}	// endif
+	}
+	ofResFile << "\n";
+
+	ifLogFile.close();
+	ofResFile.close();
 }
 
 /************************************************************************/
@@ -267,4 +380,39 @@ void ComLogAnalyze::CalcAverageData()
   m_dAveragePSNRY /= m_uiNumOfLogLine;
   m_dAveragePSNRU /= m_uiNumOfLogLine;
   m_dAveragePSNRV /= m_uiNumOfLogLine;
+}
+
+void ComLogAnalyze::runSort()
+{
+	int iNumPic = (int)m_vdPOC.size();
+	double dTemp;
+
+	for (int i = iNumPic - 1; i > 0; i--)
+	{
+		for (int j = 0; j < i - 1; j++)
+		{
+			if (m_vdPOC[j] > m_vdPOC[j + 1])
+			{
+				dTemp = m_vdPOC[j];
+				m_vdPOC[j] = m_vdPOC[j + 1];
+				m_vdPOC[j + 1] = dTemp;
+
+				dTemp = m_vdBit[j];
+				m_vdBit[j] = m_vdBit[j + 1];
+				m_vdBit[j + 1] = dTemp;
+
+				dTemp = m_vdPSNRY[j];
+				m_vdPSNRY[j] = m_vdPSNRY[j + 1];
+				m_vdPSNRY[j + 1] = dTemp;
+
+				dTemp = m_vdPSNRU[j];
+				m_vdPSNRU[j] = m_vdPSNRU[j + 1];
+				m_vdPSNRU[j + 1] = dTemp;
+
+				dTemp = m_vdPSNRV[j];
+				m_vdPSNRV[j] = m_vdPSNRV[j + 1];
+				m_vdPSNRV[j + 1] = dTemp;
+			}
+		}
+	}
 }

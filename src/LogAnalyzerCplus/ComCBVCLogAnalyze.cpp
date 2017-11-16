@@ -31,19 +31,12 @@ ComCBVCLogAnalyze::~ComCBVCLogAnalyze()
 
 void ComCBVCLogAnalyze::InitParam(ComParam & cParam)
 {
-  sprintf_s(m_chNameOfVidLogFile, "%s", cParam.m_chNameOfVidLogFile);
-  sprintf_s(m_chNameOfLibLogFile, "%s", cParam.m_chNameOfLibLogFile);
-  sprintf_s(m_chNameOfMapFile, "%s", cParam.m_chNameOfMapFile);
-  sprintf_s(m_chNameOfSceneChangePOCFile, "%s", cParam.m_chNameOfSceneChangePOCFile);
-  sprintf_s(m_chNameOfOutResultFile, "%s", cParam.m_chNameOfOutResultFile);
+	m_pcParam = &cParam;
 
   m_dFrameRate = cParam.m_dFrameRate;
   m_eTypeOfCodec = cParam.m_eTypeOfCodec;
   m_uiNumOfVidPic = cParam.m_uiNumOfVidPic;
   m_uiMaxIntraPeroid = cParam.m_uiMaxIntraPeroid;
-
-  // Generating Map of Video Picture and Library Picture.
-  GenerateMapOfVidLib();
 }
 
 void ComCBVCLogAnalyze::InitMemory()
@@ -92,7 +85,7 @@ void ComCBVCLogAnalyze::DestroyMemory()
 
 void ComCBVCLogAnalyze::ReadMapFile()
 {
-  ifstream ifMapFile(m_chNameOfMapFile);
+  ifstream ifMapFile(m_pcParam->m_sNameOfVidLibMapFile);
   char buffer[2048];
 
   unsigned int uiPOCOfVidPic = 0;
@@ -100,7 +93,7 @@ void ComCBVCLogAnalyze::ReadMapFile()
 
   if (! ifMapFile.good())
   {
-    cerr << "Parameter file of library extraction " << m_chNameOfMapFile << " could not be open!\n" << endl;
+    cerr << "Parameter file of library extraction " << m_pcParam->m_sNameOfVidLibMapFile << " could not be open!\n" << endl;
     exit(1);
   }
 
@@ -133,14 +126,14 @@ void ComCBVCLogAnalyze::ReadMapFile()
 
 void ComCBVCLogAnalyze::ReadSceneChangePOCFile()
 {
-  ifstream ifSceneChangePOCFile(m_chNameOfSceneChangePOCFile);
+  ifstream ifSceneChangePOCFile(m_pcParam->m_sNameOfSceneChangePOCFile);
 
   unsigned int uiPOCOfVidSceneChangePic;
   std::vector<unsigned int> vuiTempSceneChangePic;
 
   if (! ifSceneChangePOCFile.good())
   {
-    cerr << "Parameter file of library extraction " << m_chNameOfMapFile << " could not be open!\n" << endl;
+    cerr << "Parameter file of library extraction " << m_pcParam->m_sNameOfSceneChangePOCFile << " could not be open!\n" << endl;
     exit(1);
   }
 
@@ -170,11 +163,12 @@ void ComCBVCLogAnalyze::ReadSceneChangePOCFile()
 
 void ComCBVCLogAnalyze::WriteResult()
 {
-  ofstream ofResult(m_chNameOfOutResultFile);
+  ofstream ofResult(m_pcParam->m_sNameOfOutResultFile, std::ios::app);
 
+	ofResult << m_cVidLog.m_sNameOfLogFile << endl;
   for (int i = 0; i != m_vdAverageRate.size(); ++i)
   {
-    ofResult << m_vdAverageRate[i] << " " << m_vdAveragePSNRY[i] << " " << m_vdAveragePSNRU[i] << " " << m_vdAveragePSNRV[i] << endl;
+    ofResult << m_vdAverageRate[i] << "\t" << m_vdAveragePSNRY[i] << "\t" << m_vdAveragePSNRU[i] << "\t" << m_vdAveragePSNRV[i] << endl;
   }
 
   ofResult.close();
@@ -216,7 +210,7 @@ void ComCBVCLogAnalyze::GetSceneAverageData()
     unsigned int uiPOCOfLibPic = vuiPOCOfLibPic[j];
 
     // Get bit rate of the library picture.
-    m_cLibLog.InitParam(m_chNameOfLibLogFile, m_chNameOfOutResultFile, uiPOCOfLibPic + 1, uiPOCOfLibPic + 1, m_dFrameRate, m_eTypeOfCodec);
+    m_cLibLog.InitParam(m_pcParam->m_sNameOfLibLogFile, m_pcParam->m_sNameOfOutResultFile, uiPOCOfLibPic + 1, uiPOCOfLibPic + 1, m_dFrameRate, m_eTypeOfCodec);
     m_cLibLog.InitMemory();
     m_cLibLog.ReadLogFile();
     m_cLibLog.CalcAverageData();
@@ -231,7 +225,7 @@ void ComCBVCLogAnalyze::GetSceneAverageData()
         unsigned int uiEndNumOfLogLine = uiStartNumOfLogLine;
         assert(uiEndNumOfLogLine <= m_uiNumOfVidPic);
 
-        m_cVidLog.InitParam(m_chNameOfVidLogFile, m_chNameOfOutResultFile, uiStartNumOfLogLine, uiEndNumOfLogLine, m_dFrameRate, m_eTypeOfCodec);
+        m_cVidLog.InitParam(m_pcParam->m_sNameOfVidLogFile, m_pcParam->m_sNameOfOutResultFile, uiStartNumOfLogLine, uiEndNumOfLogLine, m_dFrameRate, m_eTypeOfCodec);
         m_cVidLog.InitMemory();
         m_cVidLog.ReadSingleIntraLogFile();
         m_cVidLog.CalcAverageData();
@@ -266,7 +260,7 @@ Void ComCBVCLogAnalyze::KeyPicExpand(std::vector<unsigned int> & vuiSrcSceneChan
   UInt iTempKeyFrameIndex;
   UInt iNumScene = vuiSrcSceneChangePOC.size();
   UInt iMaxIntraPeriod = m_uiMaxIntraPeroid;
-  UInt iMaxPicIndex = m_uiNumOfVidPic - 1;
+	UInt iMaxPicIndex = m_cVidLog.m_vdPOC.size() - 1;
 
   // Main loop for expandation.
   UInt iTempIntraPeriod;
@@ -292,7 +286,7 @@ Void ComCBVCLogAnalyze::KeyPicExpand(std::vector<unsigned int> & vuiSrcSceneChan
   iTempKeyFrameIndex = vuiSrcSceneChangePOC[iNumScene - 1];
   viKeyFrameIndex.push_back(iTempKeyFrameIndex);
   iTempIntraPeriod = iMaxPicIndex - vuiSrcSceneChangePOC[iNumScene - 1] + 1;
-  iTempCountIntra = (UInt)ceil((Double)(iTempIntraPeriod / iMaxIntraPeriod));
+  iTempCountIntra = (iTempIntraPeriod % iMaxIntraPeriod) ? (UInt)ceil((Double)(iTempIntraPeriod / iMaxIntraPeriod)) : ((UInt)(iTempIntraPeriod / iMaxIntraPeriod) - 1);
   for (UInt j = 0; j != iTempCountIntra; ++j)
   {
     iTempKeyFrameIndex = vuiSrcSceneChangePOC[iNumScene - 1] + (j + 1) * iMaxIntraPeriod;
@@ -305,4 +299,129 @@ Void ComCBVCLogAnalyze::KeyPicExpand(std::vector<unsigned int> & vuiSrcSceneChan
 
   // Assign the key frame index to variable KeyFrame.
   vuiSrcSceneChangePOC.swap(viKeyFrameIndex);
+}
+
+void ComCBVCLogAnalyze::runCalculateRandomAccess()
+{
+	m_cLibLog.InitParam(m_pcParam->m_sNameOfLibLogFile, m_pcParam->m_sNameOfOutResultFile, 0, 0, m_pcParam->m_dFrameRate, m_pcParam->m_eTypeOfCodec);
+	m_cLibLog.ReadLogFile();
+	m_cLibLog.runSort();
+
+	m_cVidLog.InitParam(m_pcParam->m_sNameOfVidLogFile, m_pcParam->m_sNameOfOutResultFile, 0, 0, m_pcParam->m_dFrameRate, m_pcParam->m_eTypeOfCodec);
+	m_cVidLog.ReadLogFile();
+	m_cVidLog.runSort();
+
+	GenerateMapOfVidLib();
+
+	// calculate average bitrate and psnr for random access.
+	int iNumIPic = (int)m_vvuiMapOfVidSceneChangePic.size();
+	int iNumPic = (int)m_cVidLog.m_vdPOC.size();
+	int iNumLibPic = (int)m_cLibLog.m_vdPOC.size();
+	double dTempBit = 0;
+	double dTempPSNRY = 0;
+	double dTempPSNRU = 0;
+	double dTempPSNRV = 0;
+	int iCount = 0;
+	bool bStoreLib = true;
+	vector<int> viTempLibPoc;
+
+	for (int idxEndIPic = 0; idxEndIPic < iNumIPic; idxEndIPic++)
+	{
+		dTempBit = 0;
+		dTempPSNRY = 0;
+		dTempPSNRU = 0;
+		dTempPSNRV = 0;
+		iCount = 0;
+		// for each intra picture, calculate the average results untill this picture.
+		for (int idxStartIPic = 0; idxStartIPic <= idxEndIPic; idxStartIPic++)
+		{
+			viTempLibPoc.resize(0);
+
+			for (int idxPic = m_vvuiMapOfVidSceneChangePic[idxStartIPic][0]; idxPic < iNumPic; idxPic++)
+			{
+				bStoreLib = true;
+
+				for (int idxTempIpic = idxStartIPic; idxTempIpic < iNumIPic; idxTempIpic++)
+				{
+					if (m_vvuiMapOfVidSceneChangePic[idxTempIpic][0] == m_cVidLog.m_vdPOC[idxPic])
+					{
+						for (int idxTempLibPic = 0; idxTempLibPic < (int)viTempLibPoc.size(); idxTempLibPic++)
+						{
+							if (viTempLibPoc[idxTempLibPic] == m_vvuiMapOfVidSceneChangePic[idxTempIpic][1])
+							{
+								bStoreLib = false;
+								break;
+							}
+						}
+
+						if (bStoreLib)
+						{
+							dTempBit += m_cLibLog.m_vdBit[m_vvuiMapOfVidSceneChangePic[idxTempIpic][1]];
+							viTempLibPoc.push_back(m_vvuiMapOfVidSceneChangePic[idxTempIpic][1]);
+							break;
+						}
+					}
+				}
+
+				dTempBit += m_cVidLog.m_vdBit[idxPic];
+				dTempPSNRY += m_cVidLog.m_vdPSNRY[idxPic];
+				dTempPSNRU += m_cVidLog.m_vdPSNRU[idxPic];
+				dTempPSNRV += m_cVidLog.m_vdPSNRV[idxPic];
+				iCount++;
+			}
+		}
+
+		m_vdAverageRate.push_back(dTempBit / iCount * m_pcParam->m_dFrameRate / 1000);
+		m_vdAveragePSNRY.push_back(dTempPSNRY / iCount);
+		m_vdAveragePSNRU.push_back(dTempPSNRU / iCount);
+		m_vdAveragePSNRV.push_back(dTempPSNRV / iCount);
+	}
+}
+
+void ComCBVCLogAnalyze::runCalculateAnchorRandomAccess()
+{
+	m_vdAveragePSNRU.resize(0);
+	m_vdAveragePSNRV.resize(0);
+	m_vdAveragePSNRY.resize(0);
+	m_vdAverageRate.resize(0);
+
+	m_cAnchorVidLog.InitParam(m_pcParam->m_sNameOfAnchorVidFile, m_pcParam->m_sNameOfOutResultFile, 0, 0, m_pcParam->m_dFrameRate, m_pcParam->m_eTypeOfCodec);
+
+	m_cAnchorVidLog.ReadLogFile();
+	m_cAnchorVidLog.runSort();
+
+	// calculate average bitrate and psnr for random access.
+	int iNumIPic = (int)m_vvuiMapOfVidSceneChangePic.size();
+	int iNumPic = (int)m_cAnchorVidLog.m_vdPOC.size();
+	double dTempBit = 0;
+	double dTempPSNRY = 0;
+	double dTempPSNRU = 0;
+	double dTempPSNRV = 0;
+	int iCount = 0;
+
+	for (int idxEndIPic = 0; idxEndIPic < iNumIPic; idxEndIPic++)
+	{
+		dTempBit = 0;
+		dTempPSNRY = 0;
+		dTempPSNRU = 0;
+		dTempPSNRV = 0;
+		iCount = 0;
+		// for each intra picture, calculate the average results untill this picture.
+		for (int idxStartIPic = 0; idxStartIPic <= idxEndIPic; idxStartIPic++)
+		{
+			for (int idxPic = m_vvuiMapOfVidSceneChangePic[idxStartIPic][0]; idxPic < iNumPic; idxPic++)
+			{
+				dTempBit += m_cAnchorVidLog.m_vdBit[idxPic];
+				dTempPSNRY += m_cAnchorVidLog.m_vdPSNRY[idxPic];
+				dTempPSNRU += m_cAnchorVidLog.m_vdPSNRU[idxPic];
+				dTempPSNRV += m_cAnchorVidLog.m_vdPSNRV[idxPic];
+				iCount++;
+			}
+		}
+
+		m_vdAverageRate.push_back(dTempBit / iCount * m_pcParam->m_dFrameRate / 1000);
+		m_vdAveragePSNRY.push_back(dTempPSNRY / iCount);
+		m_vdAveragePSNRU.push_back(dTempPSNRU / iCount);
+		m_vdAveragePSNRV.push_back(dTempPSNRV / iCount);
+	}
 }

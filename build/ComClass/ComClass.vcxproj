@@ -52,6 +52,8 @@
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(SolutionDir)\src;</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -65,6 +67,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(SolutionDir)\src;</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -75,11 +78,13 @@
   <ItemGroup>
     <ClInclude Include="..\..\src\ComClass\ComParam.h" />
     <ClInclude Include="..\..\src\ComClass\ComPic.h" />
+    <ClInclude Include="..\..\src\ComClass\program_options_lite.h" />
     <ClInclude Include="..\..\src\ComClass\TypeDef.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\ComClass\ComParam.cpp" />
     <ClCompile Include="..\..\src\ComClass\ComPic.cpp" />
+    <ClCompile Include="..\..\src\ComClass\program_options_lite.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
